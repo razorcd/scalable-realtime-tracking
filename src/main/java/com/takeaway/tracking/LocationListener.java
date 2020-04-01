@@ -25,24 +25,21 @@ public class LocationListener {
 //        evetsStream.doOnNext(ev -> {
             locationsRepository
                     .save(new Location(null, event.getOrderId(), event.getLng(), event.getLat(), event.getCreation(), null, Instant.now().toEpochMilli()))
-                    .log()
+//                    .log()
                     .block()
                     ;
 //        });
     }
 
-
+//
 //    @Bean
 //    public Function<Flux<String>, Flux<String>> aggregate() {
-//        return inbound -> inbound.
-//                log()
+//        return inbound -> inbound
+////                .log()
 ////                .window(Duration.ofSeconds(30), Duration.ofSeconds(5))
 ////                .flatMap(w -> locationsRepository.save(Location.random()))
 //                .log();
 //    }
-//
-//    private Mono<String> calculateAverage(GroupedFlux<String, String> group) {
-//        return group);
-//    }
+
 
 }

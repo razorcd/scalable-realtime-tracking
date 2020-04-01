@@ -19,6 +19,8 @@ spring:
       groupId: location
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      concurrency: 50
   data:
     mongodb:
       host: localhost
