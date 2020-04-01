@@ -1,0 +1,28 @@
+spring:
+  cloud.stream:
+    function:
+      definition: aggregate;receive;
+    bindings:
+      location-events:
+        destination: dummy2
+        contentType: application/json
+
+logging.level:
+  com.takeaway: DEBUG
+
+---
+spring:
+  profiles: local
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      groupId: location
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  data:
+    mongodb:
+      host: localhost
+      database: tracking
+      username: root
+      password: password
+      authentication-database: admin
