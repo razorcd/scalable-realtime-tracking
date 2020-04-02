@@ -25,7 +25,7 @@ public class LocationListener {
 //        evetsStream.doOnNext(ev -> {
             locationsRepository
                     .save(new Location(null, event.getOrderId(), event.getLng(), event.getLat(), event.getCreation(), null, Instant.now().toEpochMilli()))
-//                    .log()
+                    .log()
                     .block()
                     ;
 //        });
