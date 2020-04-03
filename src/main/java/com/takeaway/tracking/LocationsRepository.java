@@ -7,6 +7,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -16,6 +17,9 @@ public interface LocationsRepository extends ReactiveCrudRepository<Location,Str
 //    Flux<Location> findByOrderId(String orderId);
 
 //    Flux<Location> findWithTailabeAll();
+
+//    "savedInMongo3: new DateISO(....)"
+    Mono<Location> save(Location localtion);
 
     @Tailable
     Flux<Location> findByOrderId(String orderId);
