@@ -24,4 +24,14 @@ public class Location {
     private Long receivedFromKafka2;
     private Long savedInMongo3;
     private Long publishingToFE4;
+    private Boolean first;
+    private Boolean last;
+
+    public boolean isFirst() {
+        return first == true;
+    }
+
+    public boolean isLast() {
+        return last == true;
+    }
 }

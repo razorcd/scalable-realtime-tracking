@@ -2,6 +2,7 @@ package com.takeaway.tracking;
 
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.stream.annotation.StreamListener;
@@ -17,6 +18,7 @@ import java.util.function.Function;
 @Service
 @RequiredArgsConstructor
 //@Configuration
+@Slf4j
 public class LocationListener {
 //    @Autowired
     private final LocationsRepository locationsRepository;
@@ -25,6 +27,8 @@ public class LocationListener {
     @StreamListener("location-events")
 //    void listener(Flux<String> evetsStream) {
     void listener(Location event) {
+//        Instant startTime = Instant.now();
+
 //        evetsStream.doOnNext(ev -> {
             locationsRepository
                     .save(new Location(
@@ -35,15 +39,24 @@ public class LocationListener {
                             event.getCreatedByTheDriver1(),
                             Instant.now().toEpochMilli(),
                             null,
-                            null)
+                            null,
+                            event.getFirst(),
+                            event.getLast())
                     )
 //                    .log()
-                    .block()
+                    .subscribe(msg -> {
+//                        log.info("Sync save call completed in {} ms: {}",Instant.now().minusMillis(startTime.toEpochMilli()).toEpochMilli(), msg);
+                    })
+//                    .block()
                     ;
+
+//            log.info("Async save call completed in {} ms: {}", Instant.now().minusMillis(startTime.toEpochMilli()).toEpochMilli(), event);
+
 //        });
     }
 
-////
+
+    //TODO: update to spring cloud reactive. Update spring cloud too
 //    @Bean
 //    public Function<Flux<Location>, Flux<Location>> kafkaListener() {
 //        return inbound -> locationsRepository.saveAll(inbound);
