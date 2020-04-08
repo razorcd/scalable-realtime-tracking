@@ -23,32 +23,41 @@ public class LocationListener {
 //    @Autowired
     private final LocationsRepository locationsRepository;
 
+//    public Flux<Location> locationFlux;
+
     @ConditionalOnProperty(name="listener.enabled")
     @StreamListener("location-events")
 //    void listener(Flux<String> evetsStream) {
-    void listener(Location event) {
+    public void listener(Flux<Location> event) {
+
+//        locationFlux = event;
+
 //        Instant startTime = Instant.now();
 
+//        event.log().subscribe();
+
+        locationsRepository.saveAll(event.map(this::buildLocation)).subscribe();
+
 //        evetsStream.doOnNext(ev -> {
-            locationsRepository
-                    .save(new Location(
-                            null,
-                            event.getOrderId(),
-                            event.getLng(),
-                            event.getLat(),
-                            event.getCreatedByTheDriver1(),
-                            Instant.now().toEpochMilli(),
-                            null,
-                            null,
-                            event.getFirst(),
-                            event.getLast())
-                    )
-//                    .log()
-                    .subscribe(msg -> {
-//                        log.info("Sync save call completed in {} ms: {}",Instant.now().minusMillis(startTime.toEpochMilli()).toEpochMilli(), msg);
-                    })
-//                    .block()
-                    ;
+//            locationsRepository
+//                    .save(new Location(
+//                            null,
+//                            event.getOrderId(),
+//                            event.getLng(),
+//                            event.getLat(),
+//                            event.getCreatedByTheDriver1(),
+//                            Instant.now().toEpochMilli(),
+//                            null,
+//                            null,
+//                            event.getFirst(),
+//                            event.getLast())
+//                    )
+////                    .log()
+//                    .subscribe(msg -> {
+////                        log.info("Sync save call completed in {} ms: {}",Instant.now().minusMillis(startTime.toEpochMilli()).toEpochMilli(), msg);
+//                    })
+////                    .block()
+//                    ;
 
 //            log.info("Async save call completed in {} ms: {}", Instant.now().minusMillis(startTime.toEpochMilli()).toEpochMilli(), event);
 
@@ -67,5 +76,18 @@ public class LocationListener {
 ////                .log();
 //    }
 
+    private Location buildLocation(Location event) {
+        return new Location(
+                            null,
+                            event.getOrderId(),
+                            event.getLng(),
+                            event.getLat(),
+                            event.getCreatedByTheDriver1(),
+                            Instant.now().toEpochMilli(),
+                            null,
+                            null,
+                            event.getFirst(),
+                            event.getLast());
+    }
 
 }
