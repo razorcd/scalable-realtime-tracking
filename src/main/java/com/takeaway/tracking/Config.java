@@ -1,61 +1,60 @@
 package com.takeaway.tracking;
 
-import org.bson.Document;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.cloud.stream.annotation.EnableBinding;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.event.EventListener;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.index.IndexOperations;
-import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import org.springframework.data.redis.core.ReactiveRedisOperations;
+import org.springframework.data.redis.core.ReactiveRedisTemplate;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Priority;
-import java.util.Arrays;
-import java.util.List;
+import java.time.Duration;
 
-@Configuration
 @Priority(0)
+@Configuration
 //@EnableBinding(LocationSink.class)
 public class Config {
 
-    private List<String> mongoCollectionsToCapp = Arrays.asList(Location.class.getSimpleName().toLowerCase());
+//    @Bean
+//    public ReactiveRedisConnectionFactory connectionFactory() {
+//        return new LettuceConnectionFactory("localhost", 6379);
+//    }
 
-    @Autowired
-    private MongoTemplate mongoTemplate;
+//    @Bean
+//    public ReactiveRedisConnectionFactory lettuceConnectionFactory() {
+//
+//        LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder()
+//                .useSsl().and()
+//                .commandTimeout(Duration.ofSeconds(2))
+//                .shutdownTimeout(Duration.ZERO)
+//                .build();
+//
+//        return new LettuceConnectionFactory(new RedisStandaloneConfiguration("localhost", 6379), clientConfig);
+//    }
 
-    @Autowired
-    MongoMappingContext mongoMappingContext;
+    @Bean
+    ReactiveRedisTemplate<String, String> reactiveRedisTemplate(ReactiveRedisConnectionFactory factory) {
 
-    /**
-     * Cap mongo collection to support tailing.
-     */
-    @PostConstruct
-    private void createCappedCollections(){
 
-        mongoCollectionsToCapp.forEach(collectionName -> {
-            if (!mongoTemplate.collectionExists(collectionName)) return;
 
-            Document stats = mongoTemplate.getDb().runCommand(new Document("collStats", collectionName));
-            if ((Boolean) stats.get("capped") == true) {
-//                LOGGER.debug("Collection {} is already capped.", collectionName);
-            } else {
-                mongoTemplate.executeCommand("{\"convertToCapped\":\""+collectionName+"\",\"size\":500000000}");
-//                LOGGER.debug("Collection {} was capped now.", collectionName);
-            }
-        });
+        return new ReactiveRedisTemplate<>(factory, RedisSerializationContext.string());
     }
 
-
-//    // set indexes
-//    @EventListener(ApplicationReadyEvent.class)
-//    public void initIndicesAfterStartup() {
+//    @Bean
+//    ReactiveRedisOperations<String, Location> redisOperations(ReactiveRedisConnectionFactory factory) {
+//        Jackson2JsonRedisSerializer<Location> serializer = new Jackson2JsonRedisSerializer<>(Location.class);
 //
-//        IndexOperations indexOps = mongoTemplate.indexOps(Location.class);
+//        RedisSerializationContext.RedisSerializationContextBuilder<String, Location> builder =
+//                RedisSerializationContext.newSerializationContext(new StringRedisSerializer());
 //
-//        IndexResolver resolver = new MongoPersistentEntityIndexResolver(mongoMappingContext);
-//        resolver.resolveIndexFor(Location.class).forEach(indexOps::ensureIndex);
+//        RedisSerializationContext<String, Location> context = builder.value(serializer).build();
+//
+//        return new ReactiveRedisTemplate<>(factory, context);
 //    }
+
 }

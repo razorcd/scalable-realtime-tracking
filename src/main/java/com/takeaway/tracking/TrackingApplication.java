@@ -1,24 +1,26 @@
 package com.takeaway.tracking;
 
+import io.lettuce.core.pubsub.api.reactive.ChannelMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.stream.annotation.EnableBinding;
-import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
+import org.springframework.data.redis.connection.ReactiveSubscription;
+import org.springframework.data.redis.core.ReactiveRedisTemplate;
+import org.springframework.data.redis.listener.ChannelTopic;
+import org.springframework.data.redis.listener.ReactiveRedisMessageListenerContainer;
 import reactor.core.publisher.Flux;
-import reactor.core.scheduler.Scheduler;
-import reactor.core.scheduler.Schedulers;
+import reactor.core.publisher.Mono;
 
 @SpringBootApplication
 @EnableBinding
-@EnableReactiveMongoRepositories
 public class TrackingApplication implements CommandLineRunner {
 
-    public static Flux<Location> locations;
-
     @Autowired
-    LocationsRepository locationsRepository;
+    private ReactiveRedisTemplate<String, String> template;
+
+    public static Flux<Location> locations;
 
     public static void main(String[] args) {
         SpringApplication.run(TrackingApplication.class, args);
@@ -26,21 +28,29 @@ public class TrackingApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-//        Scheduler s = Schedulers.newParallel("parallel-scheduler", 20);
+//        template.opsForList().leftPush("1", "test1");
+        template.opsForList().rightPush("5", "test5").block();
+        template.opsForList().rightPop("5")
+                .doOnNext(e -> System.out.println(e))
+                .subscribe();
+        System.out.println();
 
-        locations = Flux.defer(() -> locationsRepository.findAll())
-        .parallel(20)
-        .runOn(Schedulers.parallel())
-        .;
-//        Flux<Location> all = locationsRepository
-//                .findAll()
-//                .parallel(20)
-//                .runOn(Schedulers.parallel())
-//                .publishOn(s);
-//
-//        locations = all;
+        ReactiveRedisMessageListenerContainer container = new ReactiveRedisMessageListenerContainer(template.getConnectionFactory());
+
+        Flux<ReactiveSubscription.Message<String, String>> messageFlux = container.receive(ChannelTopic.of("channel1"));
+        template.convertAndSend("channel1", "message1").block();
+
+        messageFlux.doOnNext(msg -> {
+            System.out.println(msg);
+        }).subscribe();
 
 
-////        all.subscribe((e) -> System.out.println(e));
+        template.listenToChannel("channel1").doOnNext(msg -> {
+            System.out.println(msg);
+        }).subscribe();
+
+        template.convertAndSend("channel1", "messag1").block();
+
+        System.out.println(".");
     }
 }

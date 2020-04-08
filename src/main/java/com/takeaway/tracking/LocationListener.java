@@ -24,7 +24,7 @@ import java.util.function.Function;
 @Slf4j
 public class LocationListener {
 //    @Autowired
-    private final LocationsRepository locationsRepository;
+//    private final LocationsRepository locationsRepository;
 
 //    @ConditionalOnProperty(name="listener.enabled")
 //    @StreamListener("location-events")
@@ -66,7 +66,7 @@ public class LocationListener {
 //                .log()
 //                ;
 
-        locationsRepository.saveAll(events.map(this::buildLocation)).subscribe();
+//        locationsRepository.saveAll(events.map(this::buildLocation)).subscribe();
 //        this.driverLocationEvents = events
 //                .doOnNext(driverLocationChangedEventCloudEvent -> log.debug("Received DriverLocationChangedEvent: {}", driverLocationChangedEventCloudEvent))
 //                .map(event -> event.getData().get())
@@ -88,8 +88,7 @@ public class LocationListener {
 //    }
 
     private Location buildLocation(Location event) {
-        return new Location(null,
-                            event.getOrderId(),
+        return new Location(event.getOrderId(),
                             event.getLng(),
                             event.getLat(),
                             event.getCreatedByTheDriver1(),
