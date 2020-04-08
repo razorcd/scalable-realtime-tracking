@@ -10,8 +10,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.annotation.Publisher;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.ConnectableFlux;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.function.Function;
 
@@ -23,20 +26,24 @@ public class LocationListener {
 //    @Autowired
     private final LocationsRepository locationsRepository;
 
-//    public Flux<Location> locationFlux;
+    private ConnectableFlux<Location> locationFlux;
 
     @ConditionalOnProperty(name="listener.enabled")
     @StreamListener("location-events")
 //    void listener(Flux<String> evetsStream) {
     public void listener(Flux<Location> event) {
 
-//        locationFlux = event;
+        locationFlux = event
+                .map(this::buildLocation)
+                .cache(Duration.ofSeconds(60*15))
+                .publish()
+                ;
+        locationFlux.connect();
 
 //        Instant startTime = Instant.now();
 
-//        event.log().subscribe();
 
-        locationsRepository.saveAll(event.map(this::buildLocation)).subscribe();
+        locationsRepository.saveAll(event.log().map(this::buildLocation)).subscribe();
 
 //        evetsStream.doOnNext(ev -> {
 //            locationsRepository
@@ -64,6 +71,9 @@ public class LocationListener {
 //        });
     }
 
+    public ConnectableFlux<Location> getLocationFlux() {
+        return locationFlux;
+    }
 
     //TODO: update to spring cloud reactive. Update spring cloud too
 //    @Bean

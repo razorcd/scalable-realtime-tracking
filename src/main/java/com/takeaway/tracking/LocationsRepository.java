@@ -9,6 +9,8 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 
 @Repository
@@ -23,4 +25,7 @@ public interface LocationsRepository extends ReactiveCrudRepository<Location,Str
 
     @Tailable
     Flux<Location> findByOrderId(String orderId);
+
+    @Tailable
+    Flux<Location> findByCreatedByTheDriver1IsGreaterThan(Long createdByTheDriver);
 }

@@ -2,10 +2,11 @@ package com.takeaway.tracking;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.util.Date;
 
 @Data
 @Document
@@ -20,7 +21,9 @@ public class Location {
     private final double lng;
     private final double lat;
 
-    private final String createdByTheDriver1;
+    @Indexed
+    private final Long createdByTheDriver1;
+
     private Long receivedFromKafka2;
     private Long savedInMongo3;
     private Long publishingToFE4;
