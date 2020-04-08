@@ -12,7 +12,9 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Stream;
 
 @Slf4j
 @CrossOrigin
@@ -22,21 +24,46 @@ public class TrackingController {
 
     private final LocationsRepository locationsRepository;
 
-    @GetMapping(value = "location/{orderId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    Flux<Location> create(@PathVariable String orderId) {
+    @GetMapping(value = "location", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    Flux<Location> globalLocationByOrderId() {
+//        return Flux.fromStream(Stream.generate(() -> new Random().nextInt(9999))).delayElements(Duration.ofSeconds(2));
+        return TrackingApplication.locations
+                .map(ev -> {
+                    ev.setPublishingToFE4(Instant.now().toEpochMilli());
+                    return ev;
+                });
+    }
 
-        //consume without sending to FE (avoids backpressure)
-        new Thread(() -> {
-            locationsRepository.findByOrderId(orderId)
+    @GetMapping(value = "simple/location/{orderId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    Flux<Location> simpleLocationByOrderId(@PathVariable String orderId) {
+//        return locationsRepository.findByOrderId(orderId)
+        return TrackingApplication.locations
+                    .filter(l -> l.getOrderId().equals(orderId))
                     .map(ev -> {
                         ev.setPublishingToFE4(Instant.now().toEpochMilli());
                         return ev;
                     })
-//                    .log()
-                    .blockLast()
+//                    .onBackpressureLatest()
+//                    .takeUntil(Location::isLast)
+//                    .doOnError((e) -> log.error("Error: {}", e.getMessage()))
                     ;
-            ;
-        }).start();
+    }
+
+    @GetMapping(value = "location/{orderId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    Flux<Location> locationByOrderId(@PathVariable String orderId) {
+
+        //consume without sending to FE (avoids backpressure)
+//        new Thread(() -> {
+//            locationsRepository.findByOrderId(orderId)
+//                    .map(ev -> {
+//                        ev.setPublishingToFE4(Instant.now().toEpochMilli());
+//                        return ev;
+//                    })
+////                    .log()
+//                    .blockLast()
+//                    ;
+//            ;
+//        }).start();
 
         AtomicLong startRequestTime = new AtomicLong(Instant.now().toEpochMilli());
 
@@ -47,7 +74,7 @@ public class TrackingController {
                     ev.setPublishingToFE4(Instant.now().toEpochMilli());
                     return ev;
                 })
-                .onBackpressureLatest()
+//                .onBackpressureLatest()
                 .takeUntil(Location::isLast)
                 .doOnTerminate(() -> {
                     long processTime = Instant.now().minusMillis(startRequestTime.get()).toEpochMilli();
@@ -61,7 +88,15 @@ public class TrackingController {
 
     @GetMapping(value = "count/{orderId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     Mono<Long> count(@PathVariable String orderId) {
-        return locationsRepository.findByOrderId(orderId).take(Duration.ofSeconds(3)).count();
+        return locationsRepository.findAllByOrderId(orderId).count();
+    }
+
+    @GetMapping(value = "count", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    Mono<Long> countAll() {
+        return locationsRepository.findAll().count();
     }
 
 }
+
+
+

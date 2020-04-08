@@ -21,6 +21,13 @@ public interface LocationsRepository extends ReactiveCrudRepository<Location,Str
 //    "savedInMongo3: new DateISO(....)"
     Mono<Location> save(Location localtion);
 
+    Flux<Location> saveAll(Flux<Location> localtion);
+
     @Tailable
     Flux<Location> findByOrderId(String orderId);
+
+
+    Flux<Location> findAllByOrderId(String orderId);
+
+    Flux<Location> findAll();
 }

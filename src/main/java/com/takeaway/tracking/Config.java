@@ -8,10 +8,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.IndexOperations;
-import org.springframework.data.mongodb.core.index.IndexResolver;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Priority;
@@ -20,7 +18,7 @@ import java.util.List;
 
 @Configuration
 @Priority(0)
-@EnableBinding(LocationSink.class)
+//@EnableBinding(LocationSink.class)
 public class Config {
 
     private List<String> mongoCollectionsToCapp = Arrays.asList(Location.class.getSimpleName().toLowerCase());
@@ -51,13 +49,13 @@ public class Config {
     }
 
 
-    // set indexes
-    @EventListener(ApplicationReadyEvent.class)
-    public void initIndicesAfterStartup() {
-
-        IndexOperations indexOps = mongoTemplate.indexOps(Location.class);
-
-        IndexResolver resolver = new MongoPersistentEntityIndexResolver(mongoMappingContext);
-        resolver.resolveIndexFor(Location.class).forEach(indexOps::ensureIndex);
-    }
+//    // set indexes
+//    @EventListener(ApplicationReadyEvent.class)
+//    public void initIndicesAfterStartup() {
+//
+//        IndexOperations indexOps = mongoTemplate.indexOps(Location.class);
+//
+//        IndexResolver resolver = new MongoPersistentEntityIndexResolver(mongoMappingContext);
+//        resolver.resolveIndexFor(Location.class).forEach(indexOps::ensureIndex);
+//    }
 }
