@@ -12,10 +12,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.PostConstruct;
-import java.sql.Date;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @CrossOrigin
@@ -25,41 +26,39 @@ public class TrackingController {
 
     private final LocationListener locationListener;
     private final LocationsRepository locationsRepository;
+    private final Map<Byte, ConnectableFlux<Location>> connectableFluxMap = new HashMap<>();
 
-    private ConnectableFlux<Location> dbFlux;
-    private ConnectableFlux<Location> dbFlux2;
 
     @PostConstruct
     public void construct() {
-        dbFlux = locationsRepository
-                .findByCreatedByTheDriver1IsGreaterThan(Instant.now().toEpochMilli())
-//                .findByOrderId("500001")
-                .doOnError(e -> {
-                    throw new RuntimeException("DB connection error. ", e);
-                })
-                .publish()
-                ;
-        dbFlux.connect();
-
-        dbFlux2 = locationsRepository  //TODO: query by partition token
-                .findByCreatedByTheDriver1IsGreaterThan(Instant.now().toEpochMilli())
-//                .findByOrderId("500001")
-                .doOnError(e -> {
-                    throw new RuntimeException("DB connection error. ", e);
-                })
-                .publish()
-        ;
-        dbFlux2.connect();
+        for (byte dbPartition = 0; dbPartition < Location.DB_PARTITIONS_COUNT; dbPartition++) {
+            connectableFluxMap.put(dbPartition, openDbConnection(dbPartition));
+        }
+        connectableFluxMap.values().forEach(ConnectableFlux::connect);
     }
 
-
+    private ConnectableFlux<Location> openDbConnection(byte dbPartition) {
+        return locationsRepository
+            .findByDbPartitionAndCreatedByTheDriver1IsGreaterThan(dbPartition, Instant.now().toEpochMilli())
+            .doOnError(e -> {
+                throw new RuntimeException("DB connection error. ", e);
+            })
+            .doOnTerminate(() -> {
+                throw new RuntimeException("DB connection error termination. ");
+            })
+            .publish()
+            ;
+    }
 
     @GetMapping(value = "location/{orderId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    Flux<Location> create(@PathVariable String orderId) {
+    Flux<Location> locationByOrder(@PathVariable String orderId) {
 
-        Flux<Location> oldEvents = locationsRepository.findByOrderId(orderId);
+        Flux<Location> oldEvents = locationsRepository.findByOrderId(orderId).cache();
+        oldEvents.subscribe();
 
-        Flux<Location> liveEvents = dbFlux
+        byte dbPartition = LocationListener.dbPartitionFromOrderId(orderId);
+
+        Flux<Location> liveEvents = connectableFluxMap.get(dbPartition)
 //        return locationListener.getLocationFlux()
                 .filter(event -> event.getOrderId().equals(orderId))
                 .map(ev -> {
@@ -68,50 +67,28 @@ public class TrackingController {
                 })
                 ;
 
+//        return liveEvents;
         return oldEvents.concatWith(liveEvents);
-//
-//        //consume without sending to FE (avoids backpressure)
-//        new Thread(() -> {
-//            locationsRepository.findByOrderId(orderId)
-//                    .map(ev -> {
-//                        ev.setPublishingToFE4(Instant.now().toEpochMilli());
-//                        return ev;
-//                    })
-////                    .log()
-//                    .blockLast()
-//                    ;
-//            ;
-//        }).start();
-//
-//        AtomicLong startRequestTime = new AtomicLong(Instant.now().toEpochMilli());
-//
-//        //consume by sending to FE
-//        return locationsRepository.findByOrderId(orderId)
-//                .doOnNext((ev) -> { if (ev.isFirst()) startRequestTime.set(Instant.now().toEpochMilli()); })
-//                .map(ev -> {
-//                    ev.setPublishingToFE4(Instant.now().toEpochMilli());
-//                    return ev;
-//                })
-//                .onBackpressureLatest()
-//                .takeUntil(Location::isLast)
-//                .doOnTerminate(() -> {
-//                    long processTime = Instant.now().minusMillis(startRequestTime.get()).toEpochMilli();
-//                    log.info("\n\n! Processed SSE request (orderId: {}) is {} ms. Sent {} locations in 1 connection.\n",
-//                            orderId, processTime, count(orderId).block());
-//                })
-//                .doOnError((e) -> log.error("Error {}", e.getMessage()))
-//                ;
     }
 
+    @GetMapping(value = "findby/{orderId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    Flux<Location> findByOrder(@PathVariable String orderId) {
+        return locationsRepository.findByOrderId(orderId);
+    }
+
+    @GetMapping(value = "findall", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    Flux<Location> findAll() {
+        return locationsRepository.findAll();
+    }
 
     @GetMapping(value = "count/{orderId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     Mono<Long> count(@PathVariable String orderId) {
         return locationsRepository.findByOrderId(orderId).take(Duration.ofSeconds(3)).count();
     }
 
-    @GetMapping(value = "countafter", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    Mono<Long> countAfter() {
-        return locationsRepository.findByCreatedByTheDriver1IsGreaterThan(0L).count();
+    @GetMapping(value = "count", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    Mono<Long> countAll() {
+        return locationsRepository.findAll().count();
     }
 
 }
