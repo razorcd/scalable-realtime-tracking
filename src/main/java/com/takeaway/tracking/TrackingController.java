@@ -2,6 +2,9 @@ package com.takeaway.tracking;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,7 +28,8 @@ import java.util.Map;
 public class TrackingController {
 
     private final LocationListener locationListener;
-    private final LocationsRepository locationsRepository;
+    private final LocationsReactiveRepository locationsReactiveRepository;
+    private final MongoTemplate mongoTemplate;
     private final Map<Byte, ConnectableFlux<Location>> connectableFluxMap = new HashMap<>();
 
 
@@ -38,7 +42,7 @@ public class TrackingController {
     }
 
     private ConnectableFlux<Location> openDbConnection(byte dbPartition) {
-        return locationsRepository
+        return locationsReactiveRepository
             .findByDbPartitionAndCreatedByTheDriver1IsGreaterThan(dbPartition, Instant.now().toEpochMilli())
             .doOnError(e -> {
                 throw new RuntimeException("DB connection error. ", e);
@@ -52,10 +56,6 @@ public class TrackingController {
 
     @GetMapping(value = "location/{orderId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     Flux<Location> locationByOrder(@PathVariable String orderId) {
-
-        Flux<Location> oldEvents = locationsRepository.findByOrderId(orderId).cache();
-        oldEvents.subscribe();
-
         byte dbPartition = LocationListener.dbPartitionFromOrderId(orderId);
 
         Flux<Location> liveEvents = connectableFluxMap.get(dbPartition)
@@ -67,28 +67,39 @@ public class TrackingController {
                 })
                 ;
 
-//        return liveEvents;
-        return oldEvents.concatWith(liveEvents);
+        List<Location> oldEvents = findByOrderId(orderId);
+
+        //TODO: check for possible lost events that were created btween nonReactiveQuery and reactiveQuery. Possible fix: filter nonReactive query by creationTime<now and filter reactive query by creationDate>=now
+        return Flux.fromIterable(oldEvents).concatWith(liveEvents);
     }
 
     @GetMapping(value = "findby/{orderId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     Flux<Location> findByOrder(@PathVariable String orderId) {
-        return locationsRepository.findByOrderId(orderId);
+        return locationsReactiveRepository.findByOrderId(orderId);
     }
 
     @GetMapping(value = "findall", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     Flux<Location> findAll() {
-        return locationsRepository.findAll();
+        return locationsReactiveRepository.findAll();
     }
 
     @GetMapping(value = "count/{orderId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     Mono<Long> count(@PathVariable String orderId) {
-        return locationsRepository.findByOrderId(orderId).take(Duration.ofSeconds(3)).count();
+        return locationsReactiveRepository.findByOrderId(orderId).take(Duration.ofSeconds(3)).count();
     }
 
     @GetMapping(value = "count", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     Mono<Long> countAll() {
-        return locationsRepository.findAll().count();
+        return locationsReactiveRepository.findAll().count();
+    }
+
+
+    private List<Location> findByOrderId(String orderId) {
+        Query query = new Query()
+                .addCriteria(Criteria.where("orderId")
+                        .is(orderId));
+
+        return mongoTemplate.find(query, Location.class);
     }
 
 }

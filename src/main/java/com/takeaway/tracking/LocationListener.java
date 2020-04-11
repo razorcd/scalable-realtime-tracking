@@ -16,7 +16,7 @@ import java.time.Instant;
 @Slf4j
 public class LocationListener {
 
-    private final LocationsRepository locationsRepository;
+    private final LocationsReactiveRepository locationsReactiveRepository;
 
     private ConnectableFlux<Location> locationFlux;
 
@@ -33,7 +33,7 @@ public class LocationListener {
 //                ;
 //        locationFlux.connect();
 
-        locationsRepository.saveAll(event.log().map(this::buildLocation)).subscribe();
+        locationsReactiveRepository.saveAll(event.log().map(this::buildLocation)).subscribe();
     }
 
     public ConnectableFlux<Location> getLocationFlux() {

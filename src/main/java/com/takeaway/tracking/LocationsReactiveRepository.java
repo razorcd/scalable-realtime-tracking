@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 @Repository
-public interface LocationsRepository extends ReactiveCrudRepository<Location,String> {
+public interface LocationsReactiveRepository extends ReactiveCrudRepository<Location,String> {
 
     Mono<Location> save(Location localtion);
 
