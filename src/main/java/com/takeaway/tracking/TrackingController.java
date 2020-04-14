@@ -1,7 +1,13 @@
 package com.takeaway.tracking;
 
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoClientURI;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -29,7 +35,8 @@ public class TrackingController {
 
     private final LocationListener locationListener;
     private final LocationsReactiveRepository locationsReactiveRepository;
-    private final MongoTemplate mongoTemplate;
+    private final MongoRepo mongoRepo;
+//    private final MongoTemplate mongoTemplate;
     private final Map<Byte, ConnectableFlux<Location>> connectableFluxMap = new HashMap<>();
 
 
@@ -49,8 +56,7 @@ public class TrackingController {
             })
             .doOnTerminate(() -> {
                 throw new RuntimeException("DB connection error termination. ");
-            })
-            .publish()
+            }).publish()
             ;
     }
 
@@ -67,7 +73,7 @@ public class TrackingController {
                 })
                 ;
 
-        List<Location> oldEvents = findByOrderId(orderId);
+        List<Location> oldEvents = mongoRepo.findByOrderId(orderId);
 
         //TODO: check for possible lost events that were created btween nonReactiveQuery and reactiveQuery. Possible fix: filter nonReactive query by creationTime<now and filter reactive query by creationDate>=now
         return Flux.fromIterable(oldEvents).concatWith(liveEvents);
@@ -93,13 +99,5 @@ public class TrackingController {
         return locationsReactiveRepository.findAll().count();
     }
 
-
-    private List<Location> findByOrderId(String orderId) {
-        Query query = new Query()
-                .addCriteria(Criteria.where("orderId")
-                        .is(orderId));
-
-        return mongoTemplate.find(query, Location.class);
-    }
 
 }
