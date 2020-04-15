@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jmeterTestPlan version="1.2" properties="5.0" jmeter="5.2.1">
   <hashTree>
-    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="Test Plan" enabled="true">
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="Locations publisher" enabled="true">
       <stringProp name="TestPlan.comments"></stringProp>
       <boolProp name="TestPlan.functional_mode">false</boolProp>
       <boolProp name="TestPlan.tearDown_on_shutdown">true</boolProp>
@@ -12,330 +12,49 @@
       <stringProp name="TestPlan.user_define_classpath"></stringProp>
     </TestPlan>
     <hashTree>
-      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="CREATE RANDOM SALE AMOUNTS - HIGH THROUGHPUT" enabled="false">
-        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
-        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
-          <boolProp name="LoopController.continue_forever">false</boolProp>
-          <intProp name="LoopController.loops">-1</intProp>
-        </elementProp>
-        <stringProp name="ThreadGroup.num_threads">82</stringProp>
-        <stringProp name="ThreadGroup.ramp_time">0</stringProp>
-        <boolProp name="ThreadGroup.scheduler">false</boolProp>
-        <stringProp name="ThreadGroup.duration">2</stringProp>
-        <stringProp name="ThreadGroup.delay">3</stringProp>
-        <stringProp name="TestPlan.comments">Clients sending sales data.</stringProp>
-        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
-      </ThreadGroup>
-      <hashTree>
-        <CookieManager guiclass="CookiePanel" testclass="CookieManager" testname="HTTP Cookie Manager" enabled="false">
-          <collectionProp name="CookieManager.cookies"/>
-          <boolProp name="CookieManager.clearEachIteration">false</boolProp>
-          <boolProp name="CookieManager.controlledByThreadGroup">false</boolProp>
-        </CookieManager>
-        <hashTree/>
-        <ConstantThroughputTimer guiclass="TestBeanGUI" testclass="ConstantThroughputTimer" testname="Constant Throughput Timer" enabled="true">
-          <intProp name="calcMode">2</intProp>
-          <doubleProp>
-            <name>throughput</name>
-            <value>8000000.0</value>
-            <savedValue>0.0</savedValue>
-          </doubleProp>
-        </ConstantThroughputTimer>
-        <hashTree/>
-        <LoopController guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
-          <boolProp name="LoopController.continue_forever">true</boolProp>
-          <intProp name="LoopController.loops">-1</intProp>
-        </LoopController>
-        <hashTree>
-          <RandomVariableConfig guiclass="TestBeanGUI" testclass="RandomVariableConfig" testname="Random Data Variable" enabled="true">
-            <stringProp name="maximumValue">200</stringProp>
-            <stringProp name="minimumValue">0</stringProp>
-            <stringProp name="outputFormat">####</stringProp>
-            <boolProp name="perThread">true</boolProp>
-            <stringProp name="randomSeed"></stringProp>
-            <stringProp name="variableName">data_value</stringProp>
-          </RandomVariableConfig>
-          <hashTree/>
-          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="HTTP Request: Add Resource" enabled="true">
-            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="Variables pré-définies" enabled="true">
-              <collectionProp name="Arguments.arguments">
-                <elementProp name="sales_amount" elementType="HTTPArgument">
-                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                  <stringProp name="Argument.value">${data_value}</stringProp>
-                  <stringProp name="Argument.metadata">=</stringProp>
-                  <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                  <stringProp name="Argument.name">sales_amount</stringProp>
-                </elementProp>
-              </collectionProp>
-            </elementProp>
-            <stringProp name="HTTPSampler.domain">localhost</stringProp>
-            <stringProp name="HTTPSampler.port">8080</stringProp>
-            <stringProp name="HTTPSampler.protocol"></stringProp>
-            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
-            <stringProp name="HTTPSampler.path">/sales</stringProp>
-            <stringProp name="HTTPSampler.method">POST</stringProp>
-            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
-            <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
-            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
-            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
-            <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
-            <stringProp name="HTTPSampler.connect_timeout"></stringProp>
-            <stringProp name="HTTPSampler.response_timeout"></stringProp>
-          </HTTPSamplerProxy>
-          <hashTree>
-            <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Constant Timer" enabled="false">
-              <stringProp name="ConstantTimer.delay">1</stringProp>
-            </ConstantTimer>
-            <hashTree/>
-            <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="false">
-              <boolProp name="ResultCollector.error_logging">false</boolProp>
-              <objProp>
-                <name>saveConfig</name>
-                <value class="SampleSaveConfiguration">
-                  <time>true</time>
-                  <latency>true</latency>
-                  <timestamp>true</timestamp>
-                  <success>true</success>
-                  <label>true</label>
-                  <code>true</code>
-                  <message>true</message>
-                  <threadName>true</threadName>
-                  <dataType>true</dataType>
-                  <encoding>false</encoding>
-                  <assertions>true</assertions>
-                  <subresults>true</subresults>
-                  <responseData>false</responseData>
-                  <samplerData>false</samplerData>
-                  <xml>false</xml>
-                  <fieldNames>true</fieldNames>
-                  <responseHeaders>false</responseHeaders>
-                  <requestHeaders>false</requestHeaders>
-                  <responseDataOnError>false</responseDataOnError>
-                  <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
-                  <assertionsResultsToSave>0</assertionsResultsToSave>
-                  <bytes>true</bytes>
-                  <sentBytes>true</sentBytes>
-                  <threadCounts>true</threadCounts>
-                  <idleTime>true</idleTime>
-                  <connectTime>true</connectTime>
-                </value>
-              </objProp>
-              <stringProp name="filename"></stringProp>
-            </ResultCollector>
-            <hashTree/>
-            <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Summary Report" enabled="false">
-              <boolProp name="ResultCollector.error_logging">false</boolProp>
-              <objProp>
-                <name>saveConfig</name>
-                <value class="SampleSaveConfiguration">
-                  <time>true</time>
-                  <latency>true</latency>
-                  <timestamp>true</timestamp>
-                  <success>true</success>
-                  <label>true</label>
-                  <code>true</code>
-                  <message>true</message>
-                  <threadName>true</threadName>
-                  <dataType>true</dataType>
-                  <encoding>false</encoding>
-                  <assertions>true</assertions>
-                  <subresults>true</subresults>
-                  <responseData>false</responseData>
-                  <samplerData>false</samplerData>
-                  <xml>false</xml>
-                  <fieldNames>true</fieldNames>
-                  <responseHeaders>false</responseHeaders>
-                  <requestHeaders>false</requestHeaders>
-                  <responseDataOnError>false</responseDataOnError>
-                  <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
-                  <assertionsResultsToSave>0</assertionsResultsToSave>
-                  <bytes>true</bytes>
-                  <sentBytes>true</sentBytes>
-                  <threadCounts>true</threadCounts>
-                  <idleTime>true</idleTime>
-                  <connectTime>true</connectTime>
-                </value>
-              </objProp>
-              <stringProp name="filename"></stringProp>
-            </ResultCollector>
-            <hashTree/>
-            <ResultCollector guiclass="GraphVisualizer" testclass="ResultCollector" testname="Graph Results" enabled="true">
-              <boolProp name="ResultCollector.error_logging">false</boolProp>
-              <objProp>
-                <name>saveConfig</name>
-                <value class="SampleSaveConfiguration">
-                  <time>true</time>
-                  <latency>true</latency>
-                  <timestamp>true</timestamp>
-                  <success>true</success>
-                  <label>true</label>
-                  <code>true</code>
-                  <message>true</message>
-                  <threadName>true</threadName>
-                  <dataType>true</dataType>
-                  <encoding>false</encoding>
-                  <assertions>true</assertions>
-                  <subresults>true</subresults>
-                  <responseData>false</responseData>
-                  <samplerData>false</samplerData>
-                  <xml>false</xml>
-                  <fieldNames>true</fieldNames>
-                  <responseHeaders>false</responseHeaders>
-                  <requestHeaders>false</requestHeaders>
-                  <responseDataOnError>false</responseDataOnError>
-                  <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
-                  <assertionsResultsToSave>0</assertionsResultsToSave>
-                  <bytes>true</bytes>
-                  <sentBytes>true</sentBytes>
-                  <threadCounts>true</threadCounts>
-                  <idleTime>true</idleTime>
-                  <connectTime>true</connectTime>
-                </value>
-              </objProp>
-              <stringProp name="filename"></stringProp>
-            </ResultCollector>
-            <hashTree/>
-            <ResultCollector guiclass="RespTimeGraphVisualizer" testclass="ResultCollector" testname="Response Time Graph" enabled="true">
-              <boolProp name="ResultCollector.error_logging">false</boolProp>
-              <objProp>
-                <name>saveConfig</name>
-                <value class="SampleSaveConfiguration">
-                  <time>true</time>
-                  <latency>true</latency>
-                  <timestamp>true</timestamp>
-                  <success>true</success>
-                  <label>true</label>
-                  <code>true</code>
-                  <message>true</message>
-                  <threadName>true</threadName>
-                  <dataType>true</dataType>
-                  <encoding>false</encoding>
-                  <assertions>true</assertions>
-                  <subresults>true</subresults>
-                  <responseData>false</responseData>
-                  <samplerData>false</samplerData>
-                  <xml>false</xml>
-                  <fieldNames>true</fieldNames>
-                  <responseHeaders>false</responseHeaders>
-                  <requestHeaders>false</requestHeaders>
-                  <responseDataOnError>false</responseDataOnError>
-                  <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
-                  <assertionsResultsToSave>0</assertionsResultsToSave>
-                  <bytes>true</bytes>
-                  <sentBytes>true</sentBytes>
-                  <threadCounts>true</threadCounts>
-                  <idleTime>true</idleTime>
-                  <connectTime>true</connectTime>
-                </value>
-              </objProp>
-              <stringProp name="filename"></stringProp>
-              <intProp name="RespTimeGraph.graphtitlefondsize">11</intProp>
-            </ResultCollector>
-            <hashTree/>
-          </hashTree>
-        </hashTree>
-      </hashTree>
-      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="REQUEST STATISTICS EVERY SECOND" enabled="false">
-        <stringProp name="ThreadGroup.on_sample_error">stoptest</stringProp>
-        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
-          <boolProp name="LoopController.continue_forever">false</boolProp>
-          <intProp name="LoopController.loops">-1</intProp>
-        </elementProp>
-        <stringProp name="ThreadGroup.num_threads">1</stringProp>
-        <stringProp name="ThreadGroup.ramp_time">1</stringProp>
-        <boolProp name="ThreadGroup.scheduler">false</boolProp>
-        <stringProp name="ThreadGroup.duration"></stringProp>
-        <stringProp name="ThreadGroup.delay"></stringProp>
-        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
-      </ThreadGroup>
-      <hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="HTTP Request" enabled="true">
-          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="Variables pré-définies" enabled="true">
-            <collectionProp name="Arguments.arguments"/>
+      <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="CONSTANTS" enabled="true">
+        <collectionProp name="Arguments.arguments">
+          <elementProp name="maxOrderId" elementType="Argument">
+            <stringProp name="Argument.name">maxOrderId</stringProp>
+            <stringProp name="Argument.value">601000</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
-          <stringProp name="HTTPSampler.domain">localhost</stringProp>
-          <stringProp name="HTTPSampler.port">8080</stringProp>
-          <stringProp name="HTTPSampler.protocol"></stringProp>
-          <stringProp name="HTTPSampler.contentEncoding"></stringProp>
-          <stringProp name="HTTPSampler.path">/location/1</stringProp>
-          <stringProp name="HTTPSampler.method">GET</stringProp>
-          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
-          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
-          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
-          <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
-          <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
-          <stringProp name="HTTPSampler.connect_timeout"></stringProp>
-          <stringProp name="HTTPSampler.response_timeout"></stringProp>
-        </HTTPSamplerProxy>
-        <hashTree>
-          <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
-            <boolProp name="ResultCollector.error_logging">false</boolProp>
-            <objProp>
-              <name>saveConfig</name>
-              <value class="SampleSaveConfiguration">
-                <time>true</time>
-                <latency>true</latency>
-                <timestamp>true</timestamp>
-                <success>true</success>
-                <label>true</label>
-                <code>true</code>
-                <message>true</message>
-                <threadName>true</threadName>
-                <dataType>true</dataType>
-                <encoding>false</encoding>
-                <assertions>true</assertions>
-                <subresults>true</subresults>
-                <responseData>false</responseData>
-                <samplerData>false</samplerData>
-                <xml>false</xml>
-                <fieldNames>true</fieldNames>
-                <responseHeaders>false</responseHeaders>
-                <requestHeaders>false</requestHeaders>
-                <responseDataOnError>false</responseDataOnError>
-                <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
-                <assertionsResultsToSave>0</assertionsResultsToSave>
-                <bytes>true</bytes>
-                <sentBytes>true</sentBytes>
-                <threadCounts>true</threadCounts>
-                <idleTime>true</idleTime>
-                <connectTime>true</connectTime>
-              </value>
-            </objProp>
-            <stringProp name="filename"></stringProp>
-          </ResultCollector>
-          <hashTree/>
-        </hashTree>
-      </hashTree>
-      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="CREATE LOCATIONS" enabled="true">
+          <elementProp name="minOrderId" elementType="Argument">
+            <stringProp name="Argument.name">minOrderId</stringProp>
+            <stringProp name="Argument.value">600000</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="firstLastOrderId" elementType="Argument">
+            <stringProp name="Argument.name">firstLastOrderId</stringProp>
+            <stringProp name="Argument.value">600001</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+        </collectionProp>
+      </Arguments>
+      <hashTree/>
+      <SetupThreadGroup guiclass="SetupThreadGroupGui" testclass="SetupThreadGroup" testname="setUp Thread Group" enabled="true">
         <stringProp name="ThreadGroup.on_sample_error">stoptest</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
           <boolProp name="LoopController.continue_forever">false</boolProp>
           <stringProp name="LoopController.loops">1</stringProp>
         </elementProp>
-        <stringProp name="ThreadGroup.num_threads">100</stringProp>
-        <stringProp name="ThreadGroup.ramp_time">1</stringProp>
+        <stringProp name="ThreadGroup.num_threads">1</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">0</stringProp>
         <boolProp name="ThreadGroup.scheduler">false</boolProp>
         <stringProp name="ThreadGroup.duration"></stringProp>
         <stringProp name="ThreadGroup.delay"></stringProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
-      </ThreadGroup>
+      </SetupThreadGroup>
       <hashTree>
-        <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Constant Timer" enabled="true">
-          <stringProp name="ConstantTimer.delay">10</stringProp>
-        </ConstantTimer>
-        <hashTree/>
-        <LoopController guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
-          <boolProp name="LoopController.continue_forever">true</boolProp>
-          <stringProp name="LoopController.loops">100</stringProp>
-        </LoopController>
+        <OnceOnlyController guiclass="OnceOnlyControllerGui" testclass="OnceOnlyController" testname="Once Only Controller" enabled="true"/>
         <hashTree>
           <RandomVariableConfig guiclass="TestBeanGUI" testclass="RandomVariableConfig" testname="OrderId Random Variable" enabled="true">
             <stringProp name="variableName">orderId</stringProp>
             <stringProp name="outputFormat"></stringProp>
-            <stringProp name="minimumValue">1</stringProp>
-            <stringProp name="maximumValue">100</stringProp>
+            <stringProp name="minimumValue">${firstLastOrderId}</stringProp>
+            <stringProp name="maximumValue">${firstLastOrderId}</stringProp>
             <stringProp name="randomSeed"></stringProp>
-            <boolProp name="perThread">false</boolProp>
+            <boolProp name="perThread">true</boolProp>
           </RandomVariableConfig>
           <hashTree/>
           <RandomVariableConfig guiclass="TestBeanGUI" testclass="RandomVariableConfig" testname="Lng Random Variable" enabled="true">
@@ -361,12 +80,12 @@
               <collectionProp name="Arguments.arguments">
                 <elementProp name="kafka_brokers" elementType="Argument">
                   <stringProp name="Argument.name">kafka_brokers</stringProp>
-                  <stringProp name="Argument.value">localhost:9092</stringProp>
+                  <stringProp name="Argument.value">host1</stringProp>
                   <stringProp name="Argument.metadata">=</stringProp>
                 </elementProp>
                 <elementProp name="kafka_topic" elementType="Argument">
                   <stringProp name="Argument.name">kafka_topic</stringProp>
-                  <stringProp name="Argument.value">dummy2</stringProp>
+                  <stringProp name="Argument.value">tracker-dummy</stringProp>
                   <stringProp name="Argument.metadata">=</stringProp>
                 </elementProp>
                 <elementProp name="kafka_key" elementType="Argument">
@@ -376,7 +95,7 @@
                 </elementProp>
                 <elementProp name="kafka_message" elementType="Argument">
                   <stringProp name="Argument.name">kafka_message</stringProp>
-                  <stringProp name="Argument.value">{&quot;orderId&quot;:&quot;${orderId}&quot;,&quot;lat&quot;:${lat},&quot;lng&quot;:${lng},&quot;creation&quot;:&quot;${__time(,)}&quot;}</stringProp>
+                  <stringProp name="Argument.value">{&quot;orderId&quot;:&quot;${orderId}&quot;,&quot;lat&quot;:${lat},&quot;lng&quot;:${lng},&quot;createdByTheDriver1&quot;:&quot;${__time(,)}&quot;,&quot;first&quot;:true,&quot;last&quot;:false}</stringProp>
                   <stringProp name="Argument.metadata">=</stringProp>
                 </elementProp>
                 <elementProp name="kafka_message_serializer" elementType="Argument">
@@ -391,27 +110,286 @@
                 </elementProp>
                 <elementProp name="kafka_ssl_keystore" elementType="Argument">
                   <stringProp name="Argument.name">kafka_ssl_keystore</stringProp>
-                  <stringProp name="Argument.value">${PARAMETER_KAFKA_SSL_KEYSTORE}</stringProp>
+                  <stringProp name="Argument.value">cert1</stringProp>
                   <stringProp name="Argument.metadata">=</stringProp>
                 </elementProp>
                 <elementProp name="kafka_ssl_keystore_password" elementType="Argument">
                   <stringProp name="Argument.name">kafka_ssl_keystore_password</stringProp>
-                  <stringProp name="Argument.value">${PARAMETER_KAFKA_SSL_KEYSTORE_PASSWORD}</stringProp>
+                  <stringProp name="Argument.value">---</stringProp>
                   <stringProp name="Argument.metadata">=</stringProp>
                 </elementProp>
                 <elementProp name="kafka_ssl_truststore" elementType="Argument">
                   <stringProp name="Argument.name">kafka_ssl_truststore</stringProp>
-                  <stringProp name="Argument.value">${PARAMETER_KAFKA_SSL_TRUSTSTORE}</stringProp>
+                  <stringProp name="Argument.value">cert2</stringProp>
                   <stringProp name="Argument.metadata">=</stringProp>
                 </elementProp>
                 <elementProp name="kafka_ssl_truststore_password" elementType="Argument">
                   <stringProp name="Argument.name">kafka_ssl_truststore_password</stringProp>
-                  <stringProp name="Argument.value">${PARAMETER_KAFKA_SSL_TRUSTSTORE_PASSWORD}</stringProp>
+                  <stringProp name="Argument.value">---</stringProp>
                   <stringProp name="Argument.metadata">=</stringProp>
                 </elementProp>
                 <elementProp name="kafka_use_ssl" elementType="Argument">
                   <stringProp name="Argument.name">kafka_use_ssl</stringProp>
-                  <stringProp name="Argument.value">${PARAMETER_KAFKA_USE_SSL}</stringProp>
+                  <stringProp name="Argument.value">true</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+                <elementProp name="kafka_compression_type" elementType="Argument">
+                  <stringProp name="Argument.name">kafka_compression_type</stringProp>
+                  <stringProp name="Argument.value"></stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+                <elementProp name="kafka_partition" elementType="Argument">
+                  <stringProp name="Argument.name">kafka_partition</stringProp>
+                  <stringProp name="Argument.value"></stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+            <stringProp name="classname">co.signal.kafkameter.KafkaProducerSampler</stringProp>
+          </JavaSampler>
+          <hashTree/>
+        </hashTree>
+      </hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="CREATE LOCATIONS" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">stoptest</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <intProp name="LoopController.loops">-1</intProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">10</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">1</stringProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+        <stringProp name="ThreadGroup.duration">60</stringProp>
+        <stringProp name="ThreadGroup.delay"></stringProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">false</boolProp>
+        <stringProp name="TestPlan.comments">totalEvents = nr of threads x loop count x loop counts from controller</stringProp>
+      </ThreadGroup>
+      <hashTree>
+        <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Constant Timer" enabled="true">
+          <stringProp name="ConstantTimer.delay">6</stringProp>
+        </ConstantTimer>
+        <hashTree/>
+        <LoopController guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <boolProp name="LoopController.continue_forever">true</boolProp>
+          <stringProp name="LoopController.loops">10000</stringProp>
+          <stringProp name="TestPlan.comments">(loop count = nr of events) Multiply by ConstantTimer to get the total publishing time in ms.</stringProp>
+        </LoopController>
+        <hashTree>
+          <CounterConfig guiclass="CounterConfigGui" testclass="CounterConfig" testname="Counter" enabled="false">
+            <stringProp name="CounterConfig.start">${minOrderId}</stringProp>
+            <stringProp name="CounterConfig.end">${maxOrderId}</stringProp>
+            <stringProp name="CounterConfig.incr">1</stringProp>
+            <stringProp name="CounterConfig.name">orderId</stringProp>
+            <stringProp name="CounterConfig.format"></stringProp>
+            <boolProp name="CounterConfig.per_user">true</boolProp>
+            <boolProp name="CounterConfig.reset_on_tg_iteration">true</boolProp>
+          </CounterConfig>
+          <hashTree/>
+          <RandomVariableConfig guiclass="TestBeanGUI" testclass="RandomVariableConfig" testname="OrderId Random Variable" enabled="true">
+            <stringProp name="variableName">orderId</stringProp>
+            <stringProp name="outputFormat"></stringProp>
+            <stringProp name="minimumValue">${minOrderId}</stringProp>
+            <stringProp name="maximumValue">${maxOrderId}</stringProp>
+            <stringProp name="randomSeed"></stringProp>
+            <boolProp name="perThread">true</boolProp>
+          </RandomVariableConfig>
+          <hashTree/>
+          <RandomVariableConfig guiclass="TestBeanGUI" testclass="RandomVariableConfig" testname="Lng Random Variable" enabled="true">
+            <stringProp name="variableName">lng</stringProp>
+            <stringProp name="outputFormat"></stringProp>
+            <stringProp name="minimumValue">1</stringProp>
+            <stringProp name="maximumValue">1000000</stringProp>
+            <stringProp name="randomSeed"></stringProp>
+            <boolProp name="perThread">false</boolProp>
+          </RandomVariableConfig>
+          <hashTree/>
+          <RandomVariableConfig guiclass="TestBeanGUI" testclass="RandomVariableConfig" testname="Lat Random Variable" enabled="true">
+            <stringProp name="variableName">lat</stringProp>
+            <stringProp name="outputFormat"></stringProp>
+            <stringProp name="minimumValue">1</stringProp>
+            <stringProp name="maximumValue">1000000</stringProp>
+            <stringProp name="randomSeed"></stringProp>
+            <boolProp name="perThread">false</boolProp>
+          </RandomVariableConfig>
+          <hashTree/>
+          <JavaSampler guiclass="JavaTestSamplerGui" testclass="JavaSampler" testname="Kafka Java Request" enabled="true">
+            <elementProp name="arguments" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" enabled="true">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="kafka_brokers" elementType="Argument">
+                  <stringProp name="Argument.name">kafka_brokers</stringProp>
+                  <stringProp name="Argument.value">host1</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+                <elementProp name="kafka_topic" elementType="Argument">
+                  <stringProp name="Argument.name">kafka_topic</stringProp>
+                  <stringProp name="Argument.value">tracker-dummy</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+                <elementProp name="kafka_key" elementType="Argument">
+                  <stringProp name="Argument.name">kafka_key</stringProp>
+                  <stringProp name="Argument.value">${orderId}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+                <elementProp name="kafka_message" elementType="Argument">
+                  <stringProp name="Argument.name">kafka_message</stringProp>
+                  <stringProp name="Argument.value">{&quot;orderId&quot;:&quot;${orderId}&quot;,&quot;lat&quot;:${lat},&quot;lng&quot;:${lng},&quot;createdByTheDriver1&quot;:&quot;${__time(,)}&quot;,&quot;first&quot;:false,&quot;last&quot;:false}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+                <elementProp name="kafka_message_serializer" elementType="Argument">
+                  <stringProp name="Argument.name">kafka_message_serializer</stringProp>
+                  <stringProp name="Argument.value">org.apache.kafka.common.serialization.StringSerializer</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+                <elementProp name="kafka_key_serializer" elementType="Argument">
+                  <stringProp name="Argument.name">kafka_key_serializer</stringProp>
+                  <stringProp name="Argument.value">org.apache.kafka.common.serialization.StringSerializer</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+                <elementProp name="kafka_ssl_keystore" elementType="Argument">
+                  <stringProp name="Argument.name">kafka_ssl_keystore</stringProp>
+                  <stringProp name="Argument.value">cert1</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+                <elementProp name="kafka_ssl_keystore_password" elementType="Argument">
+                  <stringProp name="Argument.name">kafka_ssl_keystore_password</stringProp>
+                  <stringProp name="Argument.value">---</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+                <elementProp name="kafka_ssl_truststore" elementType="Argument">
+                  <stringProp name="Argument.name">kafka_ssl_truststore</stringProp>
+                  <stringProp name="Argument.value">cert2</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+                <elementProp name="kafka_ssl_truststore_password" elementType="Argument">
+                  <stringProp name="Argument.name">kafka_ssl_truststore_password</stringProp>
+                  <stringProp name="Argument.value">---</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+                <elementProp name="kafka_use_ssl" elementType="Argument">
+                  <stringProp name="Argument.name">kafka_use_ssl</stringProp>
+                  <stringProp name="Argument.value">true</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+                <elementProp name="kafka_compression_type" elementType="Argument">
+                  <stringProp name="Argument.name">kafka_compression_type</stringProp>
+                  <stringProp name="Argument.value"></stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+                <elementProp name="kafka_partition" elementType="Argument">
+                  <stringProp name="Argument.name">kafka_partition</stringProp>
+                  <stringProp name="Argument.value"></stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+            <stringProp name="classname">co.signal.kafkameter.KafkaProducerSampler</stringProp>
+          </JavaSampler>
+          <hashTree/>
+        </hashTree>
+      </hashTree>
+      <PostThreadGroup guiclass="PostThreadGroupGui" testclass="PostThreadGroup" testname="tearDown Thread Group" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">stoptest</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <stringProp name="LoopController.loops">1</stringProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">1</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">1</stringProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+        <stringProp name="ThreadGroup.duration"></stringProp>
+        <stringProp name="ThreadGroup.delay"></stringProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">false</boolProp>
+      </PostThreadGroup>
+      <hashTree>
+        <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Constant Timer" enabled="true">
+          <stringProp name="ConstantTimer.delay">5000</stringProp>
+        </ConstantTimer>
+        <hashTree/>
+        <OnceOnlyController guiclass="OnceOnlyControllerGui" testclass="OnceOnlyController" testname="Once Only Controller" enabled="true"/>
+        <hashTree>
+          <RandomVariableConfig guiclass="TestBeanGUI" testclass="RandomVariableConfig" testname="OrderId Random Variable" enabled="true">
+            <stringProp name="variableName">orderId</stringProp>
+            <stringProp name="outputFormat"></stringProp>
+            <stringProp name="minimumValue">${firstLastOrderId}</stringProp>
+            <stringProp name="maximumValue">${firstLastOrderId}</stringProp>
+            <stringProp name="randomSeed"></stringProp>
+            <boolProp name="perThread">true</boolProp>
+          </RandomVariableConfig>
+          <hashTree/>
+          <RandomVariableConfig guiclass="TestBeanGUI" testclass="RandomVariableConfig" testname="Lng Random Variable" enabled="true">
+            <stringProp name="variableName">lng</stringProp>
+            <stringProp name="outputFormat"></stringProp>
+            <stringProp name="minimumValue">1</stringProp>
+            <stringProp name="maximumValue">1000000</stringProp>
+            <stringProp name="randomSeed"></stringProp>
+            <boolProp name="perThread">false</boolProp>
+          </RandomVariableConfig>
+          <hashTree/>
+          <RandomVariableConfig guiclass="TestBeanGUI" testclass="RandomVariableConfig" testname="Lat Random Variable" enabled="true">
+            <stringProp name="variableName">lat</stringProp>
+            <stringProp name="outputFormat"></stringProp>
+            <stringProp name="minimumValue">1</stringProp>
+            <stringProp name="maximumValue">10000000</stringProp>
+            <stringProp name="randomSeed"></stringProp>
+            <boolProp name="perThread">false</boolProp>
+          </RandomVariableConfig>
+          <hashTree/>
+          <JavaSampler guiclass="JavaTestSamplerGui" testclass="JavaSampler" testname="Kafka Java Request" enabled="true">
+            <elementProp name="arguments" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" enabled="true">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="kafka_brokers" elementType="Argument">
+                  <stringProp name="Argument.name">kafka_brokers</stringProp>
+                  <stringProp name="Argument.value">host1</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+                <elementProp name="kafka_topic" elementType="Argument">
+                  <stringProp name="Argument.name">kafka_topic</stringProp>
+                  <stringProp name="Argument.value">tracker-dummy</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+                <elementProp name="kafka_key" elementType="Argument">
+                  <stringProp name="Argument.name">kafka_key</stringProp>
+                  <stringProp name="Argument.value">${orderId}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+                <elementProp name="kafka_message" elementType="Argument">
+                  <stringProp name="Argument.name">kafka_message</stringProp>
+                  <stringProp name="Argument.value">{&quot;orderId&quot;:&quot;${orderId}&quot;,&quot;lat&quot;:${lat},&quot;lng&quot;:${lng},&quot;createdByTheDriver1&quot;:&quot;${__time(,)}&quot;,&quot;first&quot;:false,&quot;last&quot;:true}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+                <elementProp name="kafka_message_serializer" elementType="Argument">
+                  <stringProp name="Argument.name">kafka_message_serializer</stringProp>
+                  <stringProp name="Argument.value">org.apache.kafka.common.serialization.StringSerializer</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+                <elementProp name="kafka_key_serializer" elementType="Argument">
+                  <stringProp name="Argument.name">kafka_key_serializer</stringProp>
+                  <stringProp name="Argument.value">org.apache.kafka.common.serialization.StringSerializer</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+                <elementProp name="kafka_ssl_keystore" elementType="Argument">
+                  <stringProp name="Argument.name">kafka_ssl_keystore</stringProp>
+                  <stringProp name="Argument.value">cert1</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+                <elementProp name="kafka_ssl_keystore_password" elementType="Argument">
+                  <stringProp name="Argument.name">kafka_ssl_keystore_password</stringProp>
+                  <stringProp name="Argument.value">---</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+                <elementProp name="kafka_ssl_truststore" elementType="Argument">
+                  <stringProp name="Argument.name">kafka_ssl_truststore</stringProp>
+                  <stringProp name="Argument.value">cert2</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+                <elementProp name="kafka_ssl_truststore_password" elementType="Argument">
+                  <stringProp name="Argument.name">kafka_ssl_truststore_password</stringProp>
+                  <stringProp name="Argument.value">---</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+                <elementProp name="kafka_use_ssl" elementType="Argument">
+                  <stringProp name="Argument.name">kafka_use_ssl</stringProp>
+                  <stringProp name="Argument.value">true</stringProp>
                   <stringProp name="Argument.metadata">=</stringProp>
                 </elementProp>
                 <elementProp name="kafka_compression_type" elementType="Argument">

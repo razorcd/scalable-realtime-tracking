@@ -6,15 +6,18 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.Date;
-
 @Data
 @Document
 @AllArgsConstructor
 public class Location {
 
+    public static final int DB_PARTITIONS_COUNT = 50;
+
     @Id
     private String id;
+
+    @Indexed
+    private byte dbPartition;
 
     @Indexed
     private String orderId;
