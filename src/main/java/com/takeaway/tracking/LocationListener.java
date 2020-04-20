@@ -1,22 +1,22 @@
 package com.takeaway.tracking;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.stream.annotation.StreamListener;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.integration.annotation.Publisher;
+import org.springframework.data.redis.connection.stream.ObjectRecord;
+import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
-import java.time.Duration;
 import java.time.Instant;
-import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.Random;
+
+import static com.takeaway.tracking.LocationRepository.STREAM_PREFIX;
 
 @Component
 @RequiredArgsConstructor
@@ -58,9 +58,25 @@ public class LocationListener {
 ////        });
 //    }
 
+
+    @Autowired
+    private ReactiveRedisTemplate<String,String> template;
+
+    @Autowired
+    ObjectMapper mapper;
+
     @ConditionalOnProperty(name="listener.enabled")
-//    @StreamListener("location-events")
-    public void kafkaConsumer(Flux<Location> events) {
+    @StreamListener("location-events")
+    public void kafkaConsumer(Location event) {
+
+//        System.out.println("Received from Kafka " + event);
+//        events.doOnNext(event ->
+//        {
+            template.opsForStream().add(ObjectRecord.create(STREAM_PREFIX + event.getOrderId(), toJson(buildLocation(event)))).subscribe();
+//        })
+//        .subscribe();
+
+
 //        events.log().subscribe();
 //        Flux<Location> newFlux = events
 //                .log()
@@ -73,6 +89,14 @@ public class LocationListener {
 //                .cache(EVENTS_CACHE_SIZE, Duration.ofMinutes(EVENTS_CACHE_DURATION))
 //        ;
 //        this.driverLocationEvents.retry().subscribe();
+    }
+
+    private String toJson(Location event) {
+        try {
+            return mapper.writeValueAsString(event);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Parsing error: "+e);
+        }
     }
 
 

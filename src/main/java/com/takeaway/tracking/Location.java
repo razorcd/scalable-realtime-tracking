@@ -2,13 +2,12 @@ package com.takeaway.tracking;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.springframework.data.annotation.Id;
 
 @Data
 @AllArgsConstructor
 public class Location {
 
-    @Id
+//    @Id
     private String orderId;
     private final double lng;
     private final double lat;

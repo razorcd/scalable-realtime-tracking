@@ -29,7 +29,6 @@ public class RequestsTest {
 
         WebClient webClient = WebClient.builder().build();
         testEventStreamApiAsync(webClient, true, "localhost:8080/simple/location/{orderId}", "1");
-//        testEventStreamApiAsync(webClient, true, "https://tracker-api.dev.scoober.com/v1/trackings/{id}", "5f61ff2a5bedab9e3c3b4da94efddf31eaa0d548b413b2c5ce866e33f259fa9f");
 
         Thread.sleep(10000000L);
     }
@@ -42,7 +41,6 @@ public class RequestsTest {
             for (int i = 0; i < requestCount; i++) {
 //                System.out.print(".");
                 testEventStreamApiAsync(webClient, false, "localhost:8080/simple/location/{orderId}", "1");
-//                testEventStreamApiAsync(webClient, false, "https://tracker-api.dev.scoober.com/v1/trackings/{id}", "5f61ff2a5bedab9e3c3b4da94efddf31eaa0d548b413b2c5ce866e33f259fa9f");
             }
 
             try {
