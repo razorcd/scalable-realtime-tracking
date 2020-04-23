@@ -15,6 +15,7 @@ public class Location {
     private final String createdByTheDriver1;
     private Long receivedFromKafka2;
     private Long savedInMongo3;
+    private Long receivedFromDb;
     private Long publishingToFE4;
     private Boolean first;
     private Boolean last;

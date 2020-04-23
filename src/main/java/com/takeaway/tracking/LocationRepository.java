@@ -26,6 +26,8 @@ import org.springframework.data.redis.stream.StreamReceiver;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 import javax.annotation.PostConstruct;
 import java.time.Duration;
@@ -58,13 +60,13 @@ public class LocationRepository {
 //    @Autowired
 //    RedisReactiveCommands<String, String> commands;
 
-    private FluxSink<Map<Object,Object>> mainSink;
-    private Flux<Map<Object,Object>> liveLocations;
+    private FluxSink<String> mainSink;
+    private Flux<String> liveLocations;
 //    private CopyOnWriteArraySet<StreamName> streamNames = new CopyOnWriteArraySet<>();
-    private CopyOnWriteMap<String, StreamName> streamNames1 = new CopyOnWriteMap<>();
-    private CopyOnWriteMap<String, StreamName> streamNames2 = new CopyOnWriteMap<>();
-    private CopyOnWriteMap<String, StreamName> streamNames3 = new CopyOnWriteMap<>();
-    private CopyOnWriteMap<String, StreamName> streamNames4 = new CopyOnWriteMap<>();
+    private Map<String, StreamName> streamNames1 = new HashMap<>();
+    private Map<String, StreamName> streamNames2 = new HashMap<>();
+    private Map<String, StreamName> streamNames3 = new HashMap<>();
+    private Map<String, StreamName> streamNames4 = new HashMap<>();
 
 
     @PostConstruct
@@ -81,7 +83,7 @@ public class LocationRepository {
 //        subscribe = this.liveLocations.subscribe();
 
         //CONSUME with stream_name, on Terminate remove stream_name
-        Flux<Map<Object,Object>> objectFlux = Flux.create(sink -> this.mainSink = sink);
+        Flux<String> objectFlux = Flux.create(sink -> this.mainSink = sink);
         liveLocations = objectFlux
 //                .doOnNext(it -> log.info("Processing: " + it))
                 .publish()
@@ -104,7 +106,7 @@ public class LocationRepository {
         //select stream Set
         int streamNr = new Random().nextInt(100) % 4;
         System.out.println("Selecting random: "+streamNr);
-        CopyOnWriteMap<String, StreamName> currentStreamNames;
+        Map<String, StreamName> currentStreamNames;
         switch (streamNr) {
             case 0:
                 currentStreamNames = streamNames1;
@@ -135,7 +137,7 @@ public class LocationRepository {
 
         return liveLocations
 //                .log()
-                .map(event -> deserializeLocation(event.get("payload").toString()))
+                .map(event -> deserializeLocation(event))
                 .filter(event -> event.getOrderId().equals(orderId))
                 .doFinally(e -> {
                     currentStreamNames.remove(STREAM_PREFIX+orderId);
@@ -150,7 +152,7 @@ public class LocationRepository {
         } catch (JsonProcessingException e) { throw new RuntimeException("Can not parse json "+event); }
     }
 
-    private void subscribeRedisPoller1(CopyOnWriteMap<String, StreamName> currentStreamNames) {
+    private void subscribeRedisPoller1(Map<String, StreamName> currentStreamNames) {
 //        System.out.println("Poller starting for: "+currentStreamNames.keySet());
 //        AtomicInteger counter = new AtomicInteger();
         //TODO: fix offset time/gap between recursive calls
@@ -162,22 +164,34 @@ public class LocationRepository {
         streamNamesCollection.toArray(streamNamesArray);
 //        System.out.println(streamNamesCollection);
         template.opsForStream()
-                .read(StreamReadOptions.empty().block(Duration.ofSeconds(5)).count(5000), streamNamesArray)
+                .read(StreamReadOptions.empty().block(Duration.ofSeconds(2)).count(5000), streamNamesArray)
+                .doOnTerminate(() -> {
+//                    log.info("Terminated.");
+                    subscribeRedisPoller1(currentStreamNames);
+//                    System.out.println("Stream batch request: " + counter);
+                })
+//                .parallel(10)
+//                .runOn(Schedulers.newParallel("Pooler", 10))
 //                .onBackpressureDrop()
                 .doOnNext(it -> {
 //                    log.info("Fux element: "+it);
-                    this.mainSink.next(it.getValue());
+                            this.mainSink.next(
+                                    it.getValue().get("payload").toString()
+                                    .replace("10000000000001", it.getId().getTimestamp().toString())
+                                    .replace("20000000000002", ""+Instant.now().toEpochMilli())
+                            );
+                })
+                .doOnNext(it -> {
+                    if (it.getStream().equals(STREAM_PREFIX+"600001")) log.info("Now: {}. From Redis at {}. Event: {}", Instant.now().toEpochMilli(), it.getId().getTimestamp(), it.getValue());
+                })
+                .doOnNext(it -> {
                     currentStreamNames.put(it.getStream(), new StreamName(it.getStream(), it.getId().getTimestamp(),  (it.getId().getSequence()+1)));
 //                    counter.incrementAndGet();
                 })
                 .doOnError((e) -> {
                     log.info("Error: "+e);
                 })
-                .doOnTerminate(() -> {
-//                    log.info("Terminated.");
-                    subscribeRedisPoller1(currentStreamNames);
-//                    System.out.println("Stream batch request: " + counter);
-                })
+
 //                .doAfterTerminate(() -> {
 //                    log.info("After terminated.");
 //                })
