@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 //@EnableBinding
 @Slf4j
 public class TrackingApplication implements CommandLineRunner {
+
     public static void main(String[] args) {
         SpringApplication.run(TrackingApplication.class, args);
     }

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.data.redis.connection.stream.ObjectRecord;
@@ -58,7 +59,7 @@ public class LocationListener {
 ////        });
 //    }
 
-
+//    @Qualifier("template1")
     @Autowired
     private ReactiveRedisTemplate<String,String> template;
 
@@ -72,7 +73,7 @@ public class LocationListener {
 //        System.out.println("Received from Kafka " + event);
 //        events.doOnNext(event ->
 //        {
-            template.opsForStream().add(ObjectRecord.create(STREAM_PREFIX + event.getOrderId(), toJson(buildLocation(event)))).subscribe();
+        template.opsForStream().add(ObjectRecord.create(STREAM_PREFIX + event.getOrderId(), toJson(buildLocation(event)))).subscribe();
 //        })
 //        .subscribe();
 
@@ -120,7 +121,8 @@ public class LocationListener {
                             null,
                             null,
                             event.getFirst(),
-                            event.getLast());
+                            event.getLast(),
+                            event.getCounter());
     }
 
 }

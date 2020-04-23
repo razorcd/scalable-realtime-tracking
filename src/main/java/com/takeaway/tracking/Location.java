@@ -19,6 +19,8 @@ public class Location {
     private Boolean first;
     private Boolean last;
 
+    private Long counter;
+
     public boolean isFirst() {
         return first == true;
     }
