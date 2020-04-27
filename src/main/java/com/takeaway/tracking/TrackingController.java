@@ -8,13 +8,19 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -37,16 +43,42 @@ public class TrackingController {
 
     @GetMapping(value = "location/{orderId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     Flux<Location> simpleLocationByOrderId(@PathVariable String orderId) {
+
         return locationsRepository.getFluxByOrderId(orderId)
 //                    .filter(l -> l.getOrderId().equals(orderId))
-                    .map(ev -> {
-                        ev.setPublishingToFE4(Instant.now().toEpochMilli());
-                        return ev;
-                    })
+                .map(ev -> {
+                    ev.setPublishingToFE4(Instant.now().toEpochMilli());
+                    return ev;
+                })
+//                    .onBackpressureLatest()
+//                    .takeUntil(Location::isLast)
+//                    .doOnError((e) -> log.error("Error: {}", e.getMessage()))
+                ;
+    }
+
+    @GetMapping(value = "location/{from}/{to}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    Flux<Location> multipleLocationByOrderId(@PathVariable Integer from, @PathVariable Integer to) {
+
+        Map<String, Disposable> map = new ConcurrentHashMap<>();
+        IntStream.range(from,to+1)
+//                .doOnNext(v -> log.info(""+v))
+//                .filter(v -> false)
+                .forEach(v -> map.put(String.valueOf(v), locationsRepository.getFluxByOrderId(String.valueOf(v)).subscribe()));
+
+
+//        return locationsRepository.getFluxByOrderId(orderId)
+//                    .filter(l -> l.getOrderId().equals(orderId))
+//                    .map(ev -> {
+//                        ev.setPublishingToFE4(Instant.now().toEpochMilli());
+//                        return ev;
+//                    })
+//                    .subscribe();
 //                    .onBackpressureLatest()
 //                    .takeUntil(Location::isLast)
 //                    .doOnError((e) -> log.error("Error: {}", e.getMessage()))
                     ;
+
+        return simpleLocationByOrderId(String.valueOf(from));
     }
 
 //    @GetMapping(value = "location/{orderId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
