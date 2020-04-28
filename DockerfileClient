@@ -1,0 +1,5 @@
+FROM adoptopenjdk/openjdk11:jdk-11.0.6_10-alpine
+
+COPY ./target/request-client-*.jar request-client.jar
+
+ENTRYPOINT ["/bin/ash", "-c", "java  -jar request-client.jar"]
