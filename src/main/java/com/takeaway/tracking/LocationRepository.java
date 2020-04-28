@@ -4,12 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.common.utils.CopyOnWriteMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.stream.*;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.stream.StreamReceiver;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
@@ -51,7 +49,16 @@ public class LocationRepository {
 //    @Autowired
 //    RedisReactiveCommands<String, String> commands;
 
-    private final Map<String,StreamObject> streamObjects = new ConcurrentHashMap<>();
+//    private final Map<String,StreamObject> streamObjects0 = new ConcurrentHashMap<>();
+    private final Map<String,StreamObject> streamObjects1 = new ConcurrentHashMap<>();
+//    private final Map<String,StreamObject> streamObjects2 = new ConcurrentHashMap<>();
+//    private final Map<String,StreamObject> streamObjects3 = new ConcurrentHashMap<>();
+//    private final Map<String,StreamObject> streamObjects4 = new ConcurrentHashMap<>();
+//    private final Map<String,StreamObject> streamObjects5 = new ConcurrentHashMap<>();
+//    private final Map<String,StreamObject> streamObjects6 = new ConcurrentHashMap<>();
+//    private final Map<String,StreamObject> streamObjects7 = new ConcurrentHashMap<>();
+//    private final Map<String,StreamObject> streamObjects8 = new ConcurrentHashMap<>();
+//    private final Map<String,StreamObject> streamObjects9 = new ConcurrentHashMap<>();
 
 //    private FluxSink<String> mainSink;
 //    private Flux<String> liveLocations;
@@ -87,14 +94,16 @@ public class LocationRepository {
 //        subscribeRedisPoller1(streamNames3);
 //        subscribeRedisPoller1(streamNames4);
 
-        new Thread(() -> {
-            while (true) {
-                staticRedisPoller1(this.streamObjects);
-            }
-        }).start();
-//        new Thread(() -> staticRedisPoller1(streamNames2)).start();
-//        new Thread(() -> staticRedisPoller1(streamNames3)).start();
-//        new Thread(() -> staticRedisPoller1(streamNames4)).start();
+//        new Thread(() -> { while (true) {staticRedisPoller1(this.streamObjects0);} }).start();
+        new Thread(() -> { while (true) {staticRedisPoller1(this.streamObjects1);} }).start();
+//        new Thread(() -> { while (true) {staticRedisPoller1(this.streamObjects2);} }).start();
+//        new Thread(() -> { while (true) {staticRedisPoller1(this.streamObjects3);} }).start();
+//        new Thread(() -> { while (true) {staticRedisPoller1(this.streamObjects4);} }).start();
+//        new Thread(() -> { while (true) {staticRedisPoller1(this.streamObjects5);} }).start();
+//        new Thread(() -> { while (true) {staticRedisPoller1(this.streamObjects6);} }).start();
+//        new Thread(() -> { while (true) {staticRedisPoller1(this.streamObjects7);} }).start();
+//        new Thread(() -> { while (true) {staticRedisPoller1(this.streamObjects8);} }).start();
+//        new Thread(() -> { while (true) {staticRedisPoller1(this.streamObjects9);} }).start();
         return this;
     }
 
@@ -109,8 +118,8 @@ public class LocationRepository {
             .autoConnect(0);
 
         //TESTING
-        streamObjects.putIfAbsent(thisStreamName, StreamObject.build(thisStreamName));
-        StreamObject thisStreamObject = streamObjects.get(thisStreamName);
+        streamObjects1.putIfAbsent(thisStreamName, StreamObject.build(thisStreamName));
+        StreamObject thisStreamObject = streamObjects1.get(thisStreamName);
         thisStreamObject.addFluxObject(thisFluxSinkObject);
 
 //        if (thisStreamObject.getStreamName().equals(DEBUG_STREAM)) {
@@ -165,7 +174,7 @@ public class LocationRepository {
     }
 
     public void emit(Location location) {
-        StreamObject streamObject = streamObjects.get(STREAM_PREFIX + location.getOrderId());
+        StreamObject streamObject = streamObjects1.get(STREAM_PREFIX + location.getOrderId());
         streamObject.getFluxSinkObjects().forEach(fluxSinkObject -> {
             fluxSinkObject.getSink().next(serializeLocation(location));
         });
@@ -251,7 +260,7 @@ public class LocationRepository {
 
         long startTime = Instant.now().toEpochMilli();
         List<MapRecord<String, Object, Object>> eventBatch = redisTemplate.opsForStream()
-//                .read(StreamReadOptions.empty().block(Duration.ofSeconds(1)).count(10000), streamNamesArray);
+//                .read(StreamReadOptions.empty().block(Duration.ofSeconds(1)).count(10000), streamNamesArray)
                 .read(streamNamesArray)
                 ;
         long endTime = Instant.now().toEpochMilli();
