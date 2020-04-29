@@ -4,7 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.common.utils.CopyOnWriteMap;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.QueryTimeoutException;
 import org.springframework.data.redis.connection.stream.*;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -25,12 +27,13 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 public class LocationRepository {
-    public static final String STREAM_PREFIX = "streamK_";
+//    public static final String STREAM_PREFIX = "streamN_";
+    public static final String STREAM_PREFIX = "stream"+(new Random().nextInt(10000))+"_";
     public static final String DEBUG_STREAM = STREAM_PREFIX+"700000";
 
 //    @Qualifier("template2")
-    @Autowired
-    private ReactiveRedisTemplate<String,String> template;
+//    @Autowired
+//    private ReactiveRedisTemplate<String,String> template;
 
     @Autowired
     private RedisTemplate<String,String> redisTemplate;
@@ -49,8 +52,9 @@ public class LocationRepository {
 //    @Autowired
 //    RedisReactiveCommands<String, String> commands;
 
-//    private final Map<String,StreamObject> streamObjects0 = new ConcurrentHashMap<>();
-    private final Map<String,StreamObject> streamObjects1 = new ConcurrentHashMap<>();
+//    private static int PARALLEL_PULLERS = 4;  //1 to 10
+    private final Map<String,StreamObject> streamObjects0 = new ConcurrentHashMap<>();
+//    private final Map<String,StreamObject> streamObjects1 = new ConcurrentHashMap<>();
 //    private final Map<String,StreamObject> streamObjects2 = new ConcurrentHashMap<>();
 //    private final Map<String,StreamObject> streamObjects3 = new ConcurrentHashMap<>();
 //    private final Map<String,StreamObject> streamObjects4 = new ConcurrentHashMap<>();
@@ -71,7 +75,7 @@ public class LocationRepository {
 
     @PostConstruct
     public LocationRepository setup() throws Exception {
-        log.info("SETUP REDIS POLLER");
+        log.info("SETUP REDIS POLLER for stream frefix {}" , STREAM_PREFIX);
 //        streamNames2.put("_", new StreamName("_", Instant.now().toEpochMilli(), 0L));
 //        streamNames3.put("_", new StreamName("_", Instant.now().toEpochMilli(), 0L));
 //        streamNames4.put("_", new StreamName("_", Instant.now().toEpochMilli(), 0L));
@@ -94,16 +98,16 @@ public class LocationRepository {
 //        subscribeRedisPoller1(streamNames3);
 //        subscribeRedisPoller1(streamNames4);
 
-//        new Thread(() -> { while (true) {staticRedisPoller1(this.streamObjects0);} }).start();
-        new Thread(() -> { while (true) {staticRedisPoller1(this.streamObjects1);} }).start();
-//        new Thread(() -> { while (true) {staticRedisPoller1(this.streamObjects2);} }).start();
-//        new Thread(() -> { while (true) {staticRedisPoller1(this.streamObjects3);} }).start();
-//        new Thread(() -> { while (true) {staticRedisPoller1(this.streamObjects4);} }).start();
-//        new Thread(() -> { while (true) {staticRedisPoller1(this.streamObjects5);} }).start();
-//        new Thread(() -> { while (true) {staticRedisPoller1(this.streamObjects6);} }).start();
-//        new Thread(() -> { while (true) {staticRedisPoller1(this.streamObjects7);} }).start();
-//        new Thread(() -> { while (true) {staticRedisPoller1(this.streamObjects8);} }).start();
-//        new Thread(() -> { while (true) {staticRedisPoller1(this.streamObjects9);} }).start();
+        getPuller(this.streamObjects0).start();
+//        getPuller(this.streamObjects1).start();
+//        getPuller(this.streamObjects2).start();
+//        getPuller(this.streamObjects3).start();
+//        getPuller(this.streamObjects4).start();
+//        getPuller(this.streamObjects5).start();
+//        getPuller(this.streamObjects6).start();
+//        getPuller(this.streamObjects7).start();
+//        getPuller(this.streamObjects8).start();
+//        getPuller(this.streamObjects9).start();
         return this;
     }
 
@@ -117,9 +121,10 @@ public class LocationRepository {
             .publish()
             .autoConnect(0);
 
-        //TESTING
-        streamObjects1.putIfAbsent(thisStreamName, StreamObject.build(thisStreamName));
-        StreamObject thisStreamObject = streamObjects1.get(thisStreamName);
+        //add sink to correct Map
+        Map<String, StreamObject> selectedSteamObjects = selectStreamObjects(orderId);
+        selectedSteamObjects.putIfAbsent(thisStreamName, StreamObject.build(thisStreamName));
+        StreamObject thisStreamObject = selectedSteamObjects.get(thisStreamName);
         thisStreamObject.addFluxObject(thisFluxSinkObject);
 
 //        if (thisStreamObject.getStreamName().equals(DEBUG_STREAM)) {
@@ -173,8 +178,39 @@ public class LocationRepository {
                 ;
     }
 
+    private Map<String, StreamObject> selectStreamObjects(String orderId) {
+        return this.streamObjects0;
+//        int selectednr = Integer.valueOf(orderId) % PARALLEL_PULLERS;
+//        switch (selectednr) {
+//            case 0:
+//                return this.streamObjects0;
+//            case 1:
+//                return this.streamObjects1;
+//            case 2:
+//                return this.streamObjects2;
+//            case 3:
+//                return this.streamObjects3;
+//            case 4:
+//                return this.streamObjects4;
+//            case 5:
+//                return this.streamObjects5;
+//            case 6:
+//                return this.streamObjects6;
+//            case 7:
+//                return this.streamObjects7;
+//            case 8:
+//                return this.streamObjects8;
+//            case 9:
+//                return this.streamObjects9;
+//            default:
+//                throw new RuntimeException("Can not select strem for orderId: "+orderId);
+//        }
+    }
+
     public void emit(Location location) {
-        StreamObject streamObject = streamObjects1.get(STREAM_PREFIX + location.getOrderId());
+        Map<String, StreamObject> selectedSteamObjects = selectStreamObjects(location.getOrderId());
+
+        StreamObject streamObject = selectedSteamObjects.get(STREAM_PREFIX + location.getOrderId());
         streamObject.getFluxSinkObjects().forEach(fluxSinkObject -> {
             fluxSinkObject.getSink().next(serializeLocation(location));
         });
@@ -191,6 +227,7 @@ public class LocationRepository {
             return mapper.writeValueAsString(event);
         } catch (JsonProcessingException e) { throw new RuntimeException("Can not serialize json "+event); }
     }
+
 
 //    private void subscribeRedisPoller1(Map<String, StreamObject> currentStreamNames) {
 //        log.info("Number of streams per pulling: "+currentStreamNames.size());
@@ -245,7 +282,8 @@ public class LocationRepository {
 
 
 
-    public void staticRedisPoller1(Map<String, StreamObject> streamObjects) {
+
+    public void staticRedisPoller(Map<String, StreamObject> streamObjects) {
         Set<StreamOffset<String>> streamNamesCollection = streamObjects.values().stream()
                 .filter(streamObject -> streamObject.hasFluxSinkObjects())
                 .map(streamObject -> StreamOffset.create(streamObject.getStreamName(), ReadOffset.from("" + (streamObject.getOffsetTimeMs()) + "-"+streamObject.getOffsetCount())))
@@ -254,7 +292,7 @@ public class LocationRepository {
         StreamOffset<String>[] streamNamesArray = new StreamOffset[streamNamesCollection.size()];
         streamNamesCollection.toArray(streamNamesArray);
 
-        if (streamNamesCollection.size()>0) log.info("Redis query for {} streams.", streamNamesCollection.size());
+//        if (streamNamesCollection.size()>0) log.info("Redis query for {} streams.", streamNamesCollection.size());
 
         if (streamNamesCollection.isEmpty()) return;
 
@@ -289,47 +327,59 @@ public class LocationRepository {
         });
     }
 
+    private Thread getPuller(Map<String, StreamObject> streamObjects) {
+        return new Thread(() -> {
+            while (true) {
+//                try {
+                    staticRedisPoller(streamObjects);
+//                } catch (QueryTimeoutException e) {
+//                    log.warn("Caught Redis QueryTimeoutException. Retrying. Error message: {}", e.getMessage());
+//                }
+            }
+        });
+    }
 
 
-//    private void withStreamReceiver() {
-//        streamReceiver.receive(StreamOffset.create(DEBUG_STREAM, ReadOffset.lastConsumed()))
-//                .doOnNext(it -> {
-//                    log.info("Received: "+it);
-//                })
-//                .subscribe();
-//    }
 
+    //    private void withStreamReceiver() {
+    //        streamReceiver.receive(StreamOffset.create(DEBUG_STREAM, ReadOffset.lastConsumed()))
+    //                .doOnNext(it -> {
+    //                    log.info("Received: "+it);
+    //                })
+    //                .subscribe();
+    //    }
     @Value
     private static class StreamObject {
-        private final String streamName;
-        private final Long offsetTimeMs;
-        private final Long offsetCount;
-        private final Set<FluxSinkObject> fluxSinkObjects;
+
+    private final String streamName;
+    private final Long offsetTimeMs;
+    private final Long offsetCount;
+    private final Set<FluxSinkObject> fluxSinkObjects;
 
         public static StreamObject build(String newStreamName) {
-            return new StreamObject(newStreamName, Instant.EPOCH.toEpochMilli(), 0L, new CopyOnWriteArraySet<>());
+            return new StreamObject(newStreamName, Instant.now().toEpochMilli(), 0L, new CopyOnWriteArraySet<>());
         }
 
         public void addFluxObject(FluxSinkObject newFluxSinkObject) {
             fluxSinkObjects.add(newFluxSinkObject);
         }
-        public void removeFluxObject(FluxSinkObject newFluxSinkObject) {
+    public void removeFluxObject(FluxSinkObject newFluxSinkObject) {
             fluxSinkObjects.remove(newFluxSinkObject);
         }
 
         public boolean hasFluxSinkObjects() {
             return !fluxSinkObjects.isEmpty();
         }
-
-//        @Value
-        @Getter
+    //        @Value
+    @Getter
         @NoArgsConstructor
         @AllArgsConstructor
         @EqualsAndHashCode
         @ToString
         public static class FluxSinkObject {
-            private final String id = UUID.randomUUID().toString();
-            private FluxSink<Object> sink;
+
+    private final String id = UUID.randomUUID().toString();
+    private FluxSink<Object> sink;
 
             public static FluxSinkObject build(FluxSink<Object> newFluxSink) {
                 return new FluxSinkObject(newFluxSink);
@@ -350,8 +400,8 @@ public class LocationRepository {
                 FluxSinkObject that = (FluxSinkObject) o;
                 return Objects.equals(id, that.id);
             }
-        }
-    }
+}
+}
 }
 
 

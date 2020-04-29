@@ -11,11 +11,14 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.data.redis.connection.stream.ObjectRecord;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
+import javax.annotation.PostConstruct;
 import java.time.Instant;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static com.takeaway.tracking.LocationRepository.STREAM_PREFIX;
 
@@ -59,12 +62,29 @@ public class LocationListener {
 ////        });
 //    }
 
+    private final AtomicLong counter = new AtomicLong();
+
 //    @Qualifier("template1")
     @Autowired
     private ReactiveRedisTemplate<String,String> template;
+    @Autowired
+    private RedisTemplate<String,String> staticTemplate;
 
     @Autowired
     ObjectMapper mapper;
+
+    @PostConstruct
+    public void setup() {
+        new Thread(() -> {
+            while(true) {
+                long current = counter.get();
+                try {Thread.sleep(1000);} catch (InterruptedException e) {e.printStackTrace();}
+                System.out.println("Incoming events from Kafka: " +((counter.get()-current)) + " events/sec");
+            }
+        })
+        .start();
+    }
+
 
     @ConditionalOnProperty(name="listener.enabled")
     @StreamListener("location-events")
@@ -73,7 +93,9 @@ public class LocationListener {
 //        System.out.println("Received from Kafka " + event);
 //        events.doOnNext(event ->
 //        {
-        template.opsForStream().add(ObjectRecord.create(STREAM_PREFIX + event.getOrderId(), toJson(buildLocation(event)))).subscribe();
+        staticTemplate.opsForStream().add(ObjectRecord.create(STREAM_PREFIX + event.getOrderId(), toJson(buildLocation(event))));
+//        template.opsForStream().add(ObjectRecord.create(STREAM_PREFIX + event.getOrderId(), toJson(buildLocation(event)))).subscribe();
+        counter.incrementAndGet();
 //        })
 //        .subscribe();
 
@@ -99,6 +121,7 @@ public class LocationListener {
             throw new RuntimeException("Parsing error: "+e);
         }
     }
+
 
 
 ////    TODO: update to spring cloud reactive. Update spring cloud too
